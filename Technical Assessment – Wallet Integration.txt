@@ -1,0 +1,126 @@
+﻿Technical Assessment – Wallet Integration
+Overview
+As part of our evaluation process, we would like you to complete a small technical assignment based on our project.
+Repository:
+https://github.com/contactsoftwaregalaxy-del/softgalaxy_japanese_soccer
+The purpose of this assessment is to evaluate your ability to integrate blockchain wallet functionality into an existing web application while maintaining clean architecture, usability, and code quality.
+________________
+
+
+Objective
+Implement a complete wallet connection flow for the project, allowing users to:
+1. Connect a supported wallet.
+2. Display the connected wallet address.
+3. Detect and display the current network.
+4. Handle account changes.
+5. Handle network changes.
+6. Disconnect the wallet.
+7. Persist the connection state across page refreshes.
+________________
+
+
+Requirements
+Supported Wallets
+At minimum, support:
+* MetaMask
+* WalletConnect
+Additional wallet support is welcome but not required. Wallet integration commonly includes connection, account management, network handling, and signing flows.
+________________
+
+
+User Interface
+Provide a clean and professional wallet experience:
+Before Connection
+* "Connect Wallet" button visible
+* Wallet selection modal
+After Connection
+Display:
+* Wallet address (shortened format)
+* Connected network
+* Wallet status indicator
+* Disconnect button
+________________
+
+
+Network Handling
+Implement:
+* Network detection
+* Unsupported network warning
+* Automatic network updates when users switch chains
+Wallet integrations are generally expected to react to account and chain changes in real time.
+________________
+
+
+Wallet Persistence
+Users should remain connected after refreshing the page whenever possible.
+________________
+
+
+Message Signing
+Implement a simple message-signing flow:
+Example:
+"Sign in to JP Soccer"
+Requirements:
+* Request signature from connected wallet
+* Display signed message result
+* Handle user rejection gracefully
+Wallet-based authentication commonly relies on message signing rather than exposing private keys.
+________________
+
+
+Code Quality
+Please ensure:
+* Clean component structure
+* Reusable hooks/services
+* Proper TypeScript typing (if applicable)
+* Error handling
+* Responsive UI
+________________
+
+
+Bonus Points
+Optional enhancements:
+* Multi-chain support
+* ENS resolution
+* Wallet balance display
+* Auto-reconnect functionality
+* Transaction history
+* Dark/light theme support
+* Unit tests
+________________
+
+
+Deliverables
+Please provide:
+1. Forked repository URL
+2. Deployment URL
+3. Short implementation document including:
+   * Architecture decisions
+   * Libraries used
+   * Challenges encountered
+   * Future improvements
+________________
+
+
+Evaluation Criteria
+We will assess:
+Category
+	Weight
+	Wallet Integration Functionality
+	35%
+	Code Quality & Architecture
+	25%
+	User Experience
+	20%
+	Error Handling
+	10%
+	Documentation
+	10%
+	________________
+
+
+Expected Duration
+Approximately 3–5 hours.
+Please submit your solution within the agreed timeframe.
+
+Don’t use restricted IP addresses. It won’t work as well for those IP addresses.

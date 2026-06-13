@@ -36,7 +36,6 @@ const nextConfig = {
       },
     ],
     dangerouslyAllowSVG: true,
-    // Ensure images render in-browser (not downloaded)
     contentDispositionType: 'inline',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
@@ -56,6 +55,14 @@ const nextConfig = {
         ],
       },
     ];
+  },
+  webpack: (config) => {
+    // Suppress warnings for optional wallet SDK peer deps
+    config.ignoreWarnings = [
+      { module: /@react-native-async-storage/ },
+      { module: /pino-pretty/ },
+    ];
+    return config;
   },
 };
 

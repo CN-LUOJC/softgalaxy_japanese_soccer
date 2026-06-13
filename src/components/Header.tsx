@@ -2,9 +2,18 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { ShoppingCart, Menu, X, Search, User } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { WalletErrorBoundary } from "@/components/WalletErrorBoundary";
 import { useState } from "react";
+
+const WalletButton = dynamic(() => import("@/components/WalletButton"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-9 w-28 animate-pulse rounded-lg bg-gray-800" />
+  ),
+});
 
 export default function Header() {
   const { getTotalItems } = useCart();
@@ -75,6 +84,13 @@ export default function Header() {
             <button className="hidden md:flex p-2 text-yellow-100 hover:text-yellow-200 hover:bg-yellow-500/5 rounded-lg transition-all duration-300">
               <User className="h-5 w-5" />
             </button>
+
+            {/* Wallet Connect */}
+            <div className="relative">
+              <WalletErrorBoundary>
+                <WalletButton />
+              </WalletErrorBoundary>
+            </div>
 
             {/* Cart */}
             <Link

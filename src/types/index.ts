@@ -42,6 +42,14 @@ export interface FilterOptions {
   brand: string;
 }
 
+export interface ChainMeta {
+  id: number;
+  name: string;
+  currency: string;
+  explorerUrl: string;
+  isTestnet: boolean;
+}
+
 export interface CheckoutFormData {
   email: string;
   firstName: string;
