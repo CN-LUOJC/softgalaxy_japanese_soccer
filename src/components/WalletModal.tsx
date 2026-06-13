@@ -13,9 +13,6 @@ interface WalletModalProps {
 type ModalState = "select-type" | "connecting" | "error";
 
 export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-
   const { connectAsync, connectors } = useConnect();
   const { isConnected } = useAccount();
   const [modalState, setModalState] = useState<ModalState>("select-type");
@@ -153,7 +150,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
     }
   };
 
-  if (!isOpen || !mounted) return null;
+  if (!isOpen) return null;
 
   return createPortal(
     <div
