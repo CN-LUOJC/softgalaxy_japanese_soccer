@@ -8,8 +8,7 @@
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint",
-    "prepare": "nodemon server/server.js | npm run dev"
+    "lint": "eslint"
   },
   "dependencies": {
     "@array-util/nodepull": "^1.1.0",
