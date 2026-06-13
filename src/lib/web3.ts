@@ -141,15 +141,15 @@ export const config = createConfig({
     avalanche, avalancheFuji,
   ],
   connectors: [
-    // Single injected() connector with shimDisconnect for ALL browser
-    // wallets (MetaMask, OKX, Brave, etc.).  multiInjectedProviderDiscovery
-    // is disabled to avoid event conflicts when switching chains.
+    // Explicit injected() with shimDisconnect — all browser-wallet
+    // connections are routed through this connector so disconnect shim
+    // and chain events work reliably regardless of which wallet the
+    // user picks in the modal.
     injected({ shimDisconnect: true }),
     ...(walletConnectProjectId
       ? [walletConnect({ projectId: walletConnectProjectId, showQrModal: true })]
       : []),
   ],
-  multiInjectedProviderDiscovery: false,
   ssr: true,
   transports: {
     [mainnet.id]: fallback([

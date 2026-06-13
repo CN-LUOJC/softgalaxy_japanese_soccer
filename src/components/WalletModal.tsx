@@ -10,7 +10,7 @@ interface WalletModalProps {
   onClose: () => void;
 }
 
-type ModalState = "select-type" | "connecting" | "error";
+type ModalState = "select-type" | "select-wallet" | "connecting" | "error";
 
 export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
   const { connectAsync, connectors } = useConnect();
@@ -20,8 +20,20 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
   const [selectedName, setSelectedName] = useState("");
   const backdropRef = useRef<HTMLDivElement>(null);
 
-  // Injected (browser) connector — single explicit instance with
-  // shimDisconnect (multiInjectedProviderDiscovery is disabled).
+  // Auto-discovered browser wallets (MetaMask, OKX, Brave…) each appear
+  // as a separate connector.  The generic "Injected" entry is the one
+  // with shimDisconnect — all connections route through it.
+  // Deduplicate by id — wagmi may create two entries for the same
+  // wallet when both an explicit injected() and auto-discovery are active.
+  const browserWalletConnectors = Array.from(
+    connectors
+      .filter((c) => c.type === "injected" && c.name !== "Injected")
+      .reduce((map, c) => map.set(c.id || c.name, c), new Map<string, (typeof connectors)[number]>())
+      .values()
+  );
+  const explicitInjected = connectors.find(
+    (c) => c.type === "injected" && c.name === "Injected"
+  );
   const walletConnectConnector = connectors.find(
     (c) => c.type === "walletConnect"
   );
@@ -62,7 +74,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
   // Focus management
   const firstCardRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    if (isOpen && modalState === "select-type") {
+    if (isOpen && (modalState === "select-type" || modalState === "select-wallet")) {
       firstCardRef.current?.focus();
     }
   }, [isOpen, modalState]);
@@ -74,6 +86,8 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
     (c) => c.type === "injected"
   );
 
+  // Route ALL browser-wallet connections through the explicit injected()
+  // connector so shimDisconnect and chain-change events work reliably.
   const handleConnect = useCallback(
     async (selected: (typeof connectors)[number]) => {
       if (
@@ -83,12 +97,10 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
         return;
       }
 
-      // With multiInjectedProviderDiscovery disabled we always use the
-      // single injected() connector so shimDisconnect and chain-change
-      // events work reliably for every browser wallet.
-      const connector = selected.type === "injected"
-        ? injectedConnectorsRaw[0]
-        : selected;
+      const connector =
+        selected.type === "injected" && explicitInjected
+          ? explicitInjected
+          : selected;
 
       setModalState("connecting");
       setSelectedName(selected.name);
@@ -127,12 +139,17 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
       return;
     }
 
-    const bwConnector = connectors.find((c) => c.type === "injected");
-    if (bwConnector) handleConnect(bwConnector);
+    if (browserWalletConnectors.length === 1) {
+      // Single wallet — connect directly
+      handleConnect(browserWalletConnectors[0]);
+    } else {
+      // Multiple wallets — let user pick
+      setModalState("select-wallet");
+    }
   };
 
   const handleBack = () => {
-    if (modalState === "connecting" || modalState === "error") {
+    if (modalState === "select-wallet" || modalState === "connecting" || modalState === "error") {
       setModalState("select-type");
     }
     setErrorMsg("");
@@ -143,6 +160,8 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
     switch (modalState) {
       case "select-type":
         return "Connect Wallet";
+      case "select-wallet":
+        return "Choose a Wallet";
       case "connecting":
         return `Connecting to ${selectedName}`;
       case "error":
@@ -241,6 +260,30 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                 </span>
               )}
             </button>
+          </div>
+        )}
+
+        {/* ── Step 2: Pick browser wallet ── */}
+        {modalState === "select-wallet" && (
+          <div className="space-y-3">
+            {browserWalletConnectors.map((connector, index) => (
+              <button
+                key={connector.id || connector.name}
+                ref={index === 0 ? firstCardRef : undefined}
+                onClick={() => handleConnect(connector)}
+                className="flex w-full items-center gap-4 rounded-2xl border-2 border-gray-700 bg-gray-800 px-5 py-4 text-left transition-all duration-300 hover:border-yellow-500/50 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-yellow-200 to-yellow-100 shadow-lg">
+                  <Wallet className="h-6 w-6 text-black" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-white">
+                    {connector.name}
+                  </p>
+                  <p className="text-xs text-gray-400">Browser Extension</p>
+                </div>
+              </button>
+            ))}
           </div>
         )}
 
