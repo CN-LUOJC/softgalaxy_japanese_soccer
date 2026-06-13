@@ -77,3 +77,7 @@ cloudinary.json
 
 # Environment variables (contains real keys)
 .env
+
+# Private / personal assessment documents (not intended for public repo)
+Technical Assessment – Wallet Integration.txt
+IMPLEMENTATION_DOC.md
