@@ -7,6 +7,7 @@ import {
   useBalance,
   useEnsName,
   useDisconnect,
+  useSwitchChain,
 } from "wagmi";
 import { mainnet } from "wagmi/chains";
 import {
@@ -16,19 +17,21 @@ import {
   Check,
   LogOut,
   Globe,
-  AlertTriangle,
   Circle,
   ExternalLink,
   User,
   X,
+  Sun,
+  Moon,
 } from "lucide-react";
 import {
   shortenAddress,
-  isChainSupported,
   CHAIN_METADATA,
   type ChainMeta,
 } from "@/lib/web3";
 import { useJPSoccerSignMessage } from "@/hooks/useSignMessage";
+import { useTransactions } from "@/hooks/useTransactions";
+import { useTheme } from "@/contexts/ThemeContext";
 import WalletModal from "./WalletModal";
 
 export default function WalletButton() {
@@ -38,6 +41,8 @@ export default function WalletButton() {
   const { data: balance } = useBalance({ address });
   const { data: ensName } = useEnsName({ address, chainId: mainnet.id });
   const { disconnect } = useDisconnect();
+  const { switchChainAsync } = useSwitchChain();
+  const [switchingTo, setSwitchingTo] = useState<number | null>(null);
 
   // Live chain ID — uses wagmi when available, with a polling fallback
   // for injected wallets (OKX) that may not emit chainChanged reliably.
@@ -131,6 +136,15 @@ export default function WalletButton() {
     reset: resetSign,
   } = useJPSoccerSignMessage();
 
+  // ── theme ────────────────────────────────────────────────────────
+  const { theme, toggleTheme } = useTheme();
+
+  // ── transaction history ──────────────────────────────────────────
+  const {
+    transactions,
+    isLoading: txsLoading,
+  } = useTransactions(address, chainId);
+
   // Auto-trigger signing once after a fresh manual wallet connection
   // (not on page-refresh reconnects).  sessionStorage flag is set by
   // WalletModal when the user actively clicks a wallet to connect.
@@ -180,7 +194,6 @@ export default function WalletButton() {
   const chainMeta: ChainMeta | undefined = chainId
     ? CHAIN_METADATA[chainId]
     : undefined;
-  const onSupportedChain = chainId ? isChainSupported(chainId) : true;
 
   const displayName =
     ensName || (address ? shortenAddress(address) : "");
@@ -241,8 +254,6 @@ export default function WalletButton() {
   }
 
   // ── connected ─────────────────────────────────────────────────────
-  const statusColor = onSupportedChain ? "bg-green-400" : "bg-amber-400";
-
   return (
     <>
       {/* Trigger button */}
@@ -252,7 +263,7 @@ export default function WalletButton() {
         className="flex items-center gap-2 rounded-lg border border-yellow-500/20 bg-gray-900/80 px-3 py-2 text-sm font-medium text-yellow-200 shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-gray-800"
       >
         <span
-          className={`h-2 w-2 rounded-full ${statusColor} shadow-sm`}
+          className={`h-2 w-2 rounded-full bg-green-400 shadow-sm`}
         />
         <span className="hidden sm:inline">{displayName}</span>
         <ChevronDown
@@ -266,31 +277,38 @@ export default function WalletButton() {
       {isDropdownOpen && (
         <div
           ref={dropdownRef}
-          className="absolute right-0 top-full z-50 mt-2 w-80 origin-top-right rounded-2xl border border-gray-700 bg-gradient-to-br from-gray-800 to-gray-900 p-5 shadow-2xl backdrop-blur-md transition-all duration-200"
+          className="wallet-dropdown absolute right-0 top-full z-50 mt-2 w-80 origin-top-right rounded-2xl border border-gray-700 bg-gradient-to-br from-gray-800 to-gray-900 p-5 shadow-2xl backdrop-blur-md transition-all duration-200"
         >
           <div className="space-y-4">
-            {/* Wallet address + copy */}
+            {/* Wallet address + copy + theme toggle */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-gray-300">
-                <User className="h-4 w-4 text-yellow-200" />
-                <span className="font-mono text-xs">
+              <div className="flex items-center gap-2 text-sm text-gray-300 min-w-0">
+                <button
+                  onClick={handleCopy}
+                  className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 transition-all duration-300 hover:bg-gray-700 hover:text-yellow-200"
+                  aria-label="Copy address"
+                >
+                  {isCopied ? (
+                    <Check className="h-3.5 w-3.5 text-green-400" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
+                </button>
+                <span className="font-mono text-xs truncate">
                   {address
                     ? `${address.slice(0, 6)}…${address.slice(-4)}`
                     : ""}
                 </span>
               </div>
               <button
-                onClick={handleCopy}
-                className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-gray-400 transition-all duration-300 hover:bg-gray-700 hover:text-yellow-200"
+                onClick={toggleTheme}
+                className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 transition-all duration-300 hover:bg-gray-700 hover:text-yellow-200"
+                aria-label="Toggle theme"
               >
-                {isCopied ? (
-                  <>
-                    <Check className="h-3 w-3 text-green-400" /> Copied
-                  </>
+                {theme === "dark" ? (
+                  <Sun className="h-3.5 w-3.5" />
                 ) : (
-                  <>
-                    <Copy className="h-3 w-3" /> Copy
-                  </>
+                  <Moon className="h-3.5 w-3.5" />
                 )}
               </button>
             </div>
@@ -322,35 +340,97 @@ export default function WalletButton() {
             )}
 
             {/* Network */}
-            <div className="flex items-center gap-2 text-sm">
-              <Circle
-                className={`h-3 w-3 ${
-                  onSupportedChain ? "text-green-400" : "text-amber-400"
-                }`}
-                fill="currentColor"
-              />
-              <span className="text-gray-300">
-                {chainMeta?.name ?? `Chain ID: ${chainId}`}
-              </span>
-              {chainMeta?.explorerUrl && (
-                <a
-                  href={`${chainMeta.explorerUrl}/address/${address}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-auto text-gray-400 hover:text-yellow-200 transition-colors"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-sm">
+                <Circle className="h-3 w-3 text-green-400" fill="currentColor" />
+                <span className="text-gray-300">
+                  {chainMeta?.name ?? `Chain ID: ${chainId}`}
+                </span>
+                {chainMeta?.explorerUrl && (
+                  <a
+                    href={`${chainMeta.explorerUrl}/address/${address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-auto text-gray-400 hover:text-yellow-200 transition-colors"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+              </div>
+
+              {/* Quick chain-switch pills — helpful for WalletConnect
+                  mobile users who cannot easily switch chains in their
+                  wallet app. */}
+              <div className="flex flex-wrap gap-1.5">
+                {Object.values(CHAIN_METADATA).map((chain) => (
+                    <button
+                      key={chain.id}
+                      disabled={switchingTo === chain.id || chainId === chain.id}
+                      onClick={async () => {
+                        setSwitchingTo(chain.id);
+                        try {
+                          await switchChainAsync?.({ chainId: chain.id });
+                        } catch {
+                          /* user rejected or switch failed */
+                        } finally {
+                          setSwitchingTo(null);
+                        }
+                      }}
+                      className={`rounded-md px-2 py-0.5 text-[11px] font-medium transition-all duration-200 ${
+                        chainId === chain.id
+                          ? "bg-green-500/20 text-green-300"
+                          : "bg-yellow-500/10 text-yellow-200 hover:bg-yellow-500/20"
+                      } disabled:cursor-default disabled:opacity-100`}
+                    >
+                      {switchingTo === chain.id ? "…" : chain.name}
+                    </button>
+                  ))}
+              </div>
             </div>
 
-            {/* Unsupported network warning */}
-            {!onSupportedChain && (
-              <div className="flex items-start gap-2 rounded-xl bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
-                <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                <span>
-                  Switch to a supported chain in your wallet.
-                </span>
+            {/* ── Recent transactions ── */}
+            {chainMeta && transactions.length > 0 && (
+              <div className="border-t border-gray-700 pt-3">
+                <p className="mb-2 text-xs font-medium text-gray-400">
+                  Recent transactions
+                </p>
+                <div className="space-y-1.5">
+                  {transactions.map((tx) => (
+                    <a
+                      key={tx.hash}
+                      href={`${chainMeta.explorerUrl}/tx/${tx.hash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between rounded-lg bg-gray-900/60 px-3 py-2 text-xs transition-colors hover:bg-gray-800"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-gray-400 font-mono">
+                          {tx.hash.slice(0, 6)}…{tx.hash.slice(-4)}
+                        </span>
+                        <span className="text-gray-500">
+                          {tx.isSend ? "→" : "←"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-gray-300">
+                          {tx.value} {chainMeta.currency}
+                        </span>
+                        <span
+                          className={
+                            tx.isSuccess ? "text-green-400" : "text-red-400"
+                          }
+                        >
+                          {tx.isSuccess ? "✓" : "✗"}
+                        </span>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+            {txsLoading && (
+              <div className="border-t border-gray-700 pt-3">
+                <p className="text-xs text-gray-500">Loading transactions…</p>
               </div>
             )}
 

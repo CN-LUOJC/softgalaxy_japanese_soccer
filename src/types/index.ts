@@ -50,6 +50,16 @@ export interface ChainMeta {
   isTestnet: boolean;
 }
 
+export interface Transaction {
+  hash: string;
+  from: string;
+  to: string;
+  value: string;
+  timestamp: string;
+  isSuccess: boolean;
+  isSend: boolean;
+}
+
 export interface CheckoutFormData {
   email: string;
   firstName: string;

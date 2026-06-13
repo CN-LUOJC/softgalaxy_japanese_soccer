@@ -3,11 +3,18 @@ import {
   mainnet,
   sepolia,
   polygon,
+  polygonAmoy,
   bsc,
+  bscTestnet,
   arbitrum,
+  arbitrumSepolia,
   optimism,
+  optimismSepolia,
   base,
+  baseSepolia,
   avalanche,
+  avalancheFuji,
+  holesky,
 } from "wagmi/chains";
 import { injected, walletConnect } from "wagmi/connectors";
 import { QueryClient } from "@tanstack/react-query";
@@ -37,71 +44,73 @@ export interface ChainMeta {
 }
 
 export const CHAIN_METADATA: Record<number, ChainMeta> = {
+  // ── mainnets ──
   [mainnet.id]: {
-    id: mainnet.id,
-    name: "Ethereum",
-    currency: "ETH",
-    explorerUrl: "https://etherscan.io",
-    isTestnet: false,
-  },
-  [sepolia.id]: {
-    id: sepolia.id,
-    name: "Sepolia",
-    currency: "SepoliaETH",
-    explorerUrl: "https://sepolia.etherscan.io",
-    isTestnet: true,
+    id: mainnet.id, name: "Ethereum", currency: "ETH",
+    explorerUrl: "https://etherscan.io", isTestnet: false,
   },
   [polygon.id]: {
-    id: polygon.id,
-    name: "Polygon",
-    currency: "MATIC",
-    explorerUrl: "https://polygonscan.com",
-    isTestnet: false,
+    id: polygon.id, name: "Polygon", currency: "MATIC",
+    explorerUrl: "https://polygonscan.com", isTestnet: false,
   },
   [bsc.id]: {
-    id: bsc.id,
-    name: "BNB Chain",
-    currency: "BNB",
-    explorerUrl: "https://bscscan.com",
-    isTestnet: false,
+    id: bsc.id, name: "BNB Chain", currency: "BNB",
+    explorerUrl: "https://bscscan.com", isTestnet: false,
   },
   [arbitrum.id]: {
-    id: arbitrum.id,
-    name: "Arbitrum",
-    currency: "ETH",
-    explorerUrl: "https://arbiscan.io",
-    isTestnet: false,
+    id: arbitrum.id, name: "Arbitrum", currency: "ETH",
+    explorerUrl: "https://arbiscan.io", isTestnet: false,
   },
   [optimism.id]: {
-    id: optimism.id,
-    name: "Optimism",
-    currency: "ETH",
-    explorerUrl: "https://optimistic.etherscan.io",
-    isTestnet: false,
+    id: optimism.id, name: "Optimism", currency: "ETH",
+    explorerUrl: "https://optimistic.etherscan.io", isTestnet: false,
   },
   [base.id]: {
-    id: base.id,
-    name: "Base",
-    currency: "ETH",
-    explorerUrl: "https://basescan.org",
-    isTestnet: false,
+    id: base.id, name: "Base", currency: "ETH",
+    explorerUrl: "https://basescan.org", isTestnet: false,
   },
   [avalanche.id]: {
-    id: avalanche.id,
-    name: "Avalanche",
-    currency: "AVAX",
-    explorerUrl: "https://snowtrace.io",
-    isTestnet: false,
+    id: avalanche.id, name: "Avalanche", currency: "AVAX",
+    explorerUrl: "https://snowtrace.io", isTestnet: false,
+  },
+  // ── testnets ──
+  [sepolia.id]: {
+    id: sepolia.id, name: "Sepolia", currency: "SepoliaETH",
+    explorerUrl: "https://sepolia.etherscan.io", isTestnet: true,
+  },
+  [holesky.id]: {
+    id: holesky.id, name: "Holesky", currency: "ETH",
+    explorerUrl: "https://holesky.etherscan.io", isTestnet: true,
+  },
+  [polygonAmoy.id]: {
+    id: polygonAmoy.id, name: "Polygon Amoy", currency: "MATIC",
+    explorerUrl: "https://amoy.polygonscan.com", isTestnet: true,
+  },
+  [bscTestnet.id]: {
+    id: bscTestnet.id, name: "BSC Testnet", currency: "tBNB",
+    explorerUrl: "https://testnet.bscscan.com", isTestnet: true,
+  },
+  [arbitrumSepolia.id]: {
+    id: arbitrumSepolia.id, name: "Arbitrum Sepolia", currency: "ETH",
+    explorerUrl: "https://sepolia.arbiscan.io", isTestnet: true,
+  },
+  [optimismSepolia.id]: {
+    id: optimismSepolia.id, name: "Optimism Sepolia", currency: "ETH",
+    explorerUrl: "https://sepolia-optimism.etherscan.io", isTestnet: true,
+  },
+  [baseSepolia.id]: {
+    id: baseSepolia.id, name: "Base Sepolia", currency: "ETH",
+    explorerUrl: "https://sepolia.basescan.org", isTestnet: true,
+  },
+  [avalancheFuji.id]: {
+    id: avalancheFuji.id, name: "Avalanche Fuji", currency: "AVAX",
+    explorerUrl: "https://testnet.snowtrace.io", isTestnet: true,
   },
 };
 
-export const SUPPORTED_CHAIN_IDS = new Set(
-  Object.keys(CHAIN_METADATA).map(Number)
-);
-
-export function isChainSupported(chainId: number): boolean {
-  return SUPPORTED_CHAIN_IDS.has(chainId);
-}
+// CHAIN_METADATA is purely a display registry.  Chains not listed here
+// are still fully usable — the UI simply falls back to "Chain ID: {id}".
+// There is no "unsupported chain" concept; every EVM chain is accepted.
 
 // ---------------------------------------------------------------------------
 // Address formatting
@@ -122,7 +131,15 @@ const walletConnectProjectId =
   process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 
 export const config = createConfig({
-  chains: [mainnet, sepolia, polygon, bsc, arbitrum, optimism, base, avalanche],
+  chains: [
+    mainnet, sepolia, holesky,
+    polygon, polygonAmoy,
+    bsc, bscTestnet,
+    arbitrum, arbitrumSepolia,
+    optimism, optimismSepolia,
+    base, baseSepolia,
+    avalanche, avalancheFuji,
+  ],
   connectors: [
     // Single injected() connector with shimDisconnect for ALL browser
     // wallets (MetaMask, OKX, Brave, etc.).  multiInjectedProviderDiscovery
@@ -165,8 +182,35 @@ export const config = createConfig({
       http(),
     ]),
     [base.id]: fallback([http("https://mainnet.base.org"), http()]),
+    [baseSepolia.id]: fallback([http("https://sepolia.base.org"), http()]),
     [avalanche.id]: fallback([
       http("https://api.avax.network/ext/bc/C/rpc"),
+      http(),
+    ]),
+    [avalancheFuji.id]: fallback([
+      http("https://api.avax-test.network/ext/bc/C/rpc"),
+      http(),
+    ]),
+    [holesky.id]: fallback([
+      http(
+        `https://eth-holesky.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || "demo"}`
+      ),
+      http(),
+    ]),
+    [polygonAmoy.id]: fallback([
+      http("https://rpc-amoy.polygon.technology"),
+      http(),
+    ]),
+    [bscTestnet.id]: fallback([
+      http("https://data-seed-prebsc-1-s1.binance.org:8545"),
+      http(),
+    ]),
+    [arbitrumSepolia.id]: fallback([
+      http("https://sepolia-rollup.arbitrum.io/rpc"),
+      http(),
+    ]),
+    [optimismSepolia.id]: fallback([
+      http("https://sepolia.optimism.io"),
       http(),
     ]),
   },

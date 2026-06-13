@@ -74,10 +74,5 @@ Desktop.ini
 
 # Cloudinary
 cloudinary.json
-
-# Environment variables (contains real keys)
-.env
-
-# Private / personal assessment documents (not intended for public repo)
+# Technical assessment document (not part of source)
 Technical Assessment – Wallet Integration.txt
-IMPLEMENTATION_DOC.md
