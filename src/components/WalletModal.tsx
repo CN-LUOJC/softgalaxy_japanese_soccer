@@ -127,7 +127,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
         setModalState("error");
       }
     },
-    [connectAsync]
+    [connectAsync, explicitInjected]
   );
 
   const handleBrowserWalletClick = () => {
