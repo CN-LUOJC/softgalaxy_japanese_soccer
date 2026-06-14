@@ -39,7 +39,7 @@
     "lodash": "^4.17.20",
     "lucide-react": "^0.541.0",
     "mongoose": "^5.10.2",
-    "next": "^15.5.6",
+    "next": "^15.5.19",
     "node-fetch": "^2.6.7",
     "nodemailer": "^6.4.11",
     "nodemon": "^3.1.14",
